@@ -1,10 +1,13 @@
 Operations Dashboard Demo
 
-File:
+Files:
 - dashboard.html
+- dashboard.css
+- dashboard.js
+- photo.png
 
 Description:
-A self-contained responsive HTML dashboard with a dark theme and mock operational metrics. It uses ECharts via CDN for chart rendering and includes a live clock, metric cards, and a mix of line, bar, pie, and radar charts.
+A responsive HTML dashboard with a dark theme and mock operational metrics. It uses ECharts via CDN for chart rendering and includes a live clock, metric cards, and a mix of line, bar, pie, and radar charts.
 
 Features:
 - Header with title and auto-updating date/time
@@ -15,7 +18,7 @@ Features:
 - System performance radar chart
 - HTML status table with metric values and icons
 - Responsive layout with glassmorphism styling
-- No external CSS frameworks; pure embedded CSS and inline JavaScript
+- No external CSS frameworks; uses external CSS and JavaScript files for structure
 
 Preview:
 ![Dashboard Screenshot](photo.png)
@@ -26,5 +29,5 @@ Usage:
 3. The dashboard is mock-data only and does not require an API.
 
 Notes:
-- The page is built for desktop and mobile using responsive CSS.
+- The page uses `dashboard.css` for styling and `dashboard.js` for chart and clock behavior.
 - Charts are loaded and resized automatically when the window changes size.

@@ -17,6 +17,9 @@ Features:
 - Responsive layout with glassmorphism styling
 - No external CSS frameworks; pure embedded CSS and inline JavaScript
 
+Preview:
+![Dashboard Screenshot](photo.png)
+
 Usage:
 1. Open `dashboard.html` in a modern browser.
 2. Ensure internet access is available so the ECharts CDN can load.

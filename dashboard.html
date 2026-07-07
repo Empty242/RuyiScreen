@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operations Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1923;
+      color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(0, 212, 255, 0.08), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.1), transparent 20%),
+        #0f19223f;
+      backdrop-filter: blur(0px);
+      color: #e5e7eb;
+    }
+
+    .page {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 24px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 24px;
+      background: rgba(15, 25, 35, 0.88);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    .header .clock {
+      font-variant-numeric: tabular-nums;
+      color: #94a3b8;
+      font-size: 0.98rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      animation: fadeIn 0.8s ease 0.12s forwards;
+      opacity: 0;
+    }
+
+    .card {
+      padding: 22px;
+      border-radius: 22px;
+      min-height: 130px;
+      background: rgba(15, 25, 35, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .card .label {
+      margin-top: 10px;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: #94a3b8;
+    }
+
+    .trend.up {
+      color: #34d399;
+    }
+
+    .trend.down {
+      color: #f8795a;
+    }
+
+    .trend span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 0.95rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr;
+      gap: 18px;
+      animation: fadeIn 0.8s ease 0.18s forwards;
+      opacity: 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 18px;
+      animation: fadeIn 0.8s ease 0.24s forwards;
+      opacity: 0;
+    }
+
+    .panel {
+      padding: 22px;
+      border-radius: 24px;
+      background: rgba(15, 25, 35, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      min-height: 360px;
+    }
+
+    .panel h2 {
+      margin: 0 0 18px;
+      font-size: 1.05rem;
+      color: #cbd5e1;
+    }
+
+    .chart-container {
+      flex: 1;
+      min-height: 280px;
+      position: relative;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+    }
+
+    .details-table th,
+    .details-table td {
+      padding: 14px 12px;
+      text-align: left;
+    }
+
+    .details-table thead th {
+      color: #94a3b8;
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .details-table tbody tr {
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .details-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .details-table td.status {
+      font-size: 1.05rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      color: #94a3b8;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-2,
+      .grid-3,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .card {
+        min-height: auto;
+      }
+
+      .panel {
+        min-height: 280px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>Operations Dashboard</h1>
+      <div class="clock" id="clock">Loading current time...</div>
+    </header>
+
+    <section class="cards">
+      <article class="card">
+        <div>
+          <div class="value">128,430</div>
+          <div class="label">Total Users</div>
+        </div>
+        <div class="trend up"><span>▲</span> +12% vs last month</div>
+      </article>
+      <article class="card">
+        <div>
+          <div class="value">8,742</div>
+          <div class="label">Active Sessions</div>
+        </div>
+        <div class="trend down"><span>▼</span> -3% vs last month</div>
+      </article>
+      <article class="card">
+        <div>
+          <div class="value">$94,280</div>
+          <div class="label">Revenue Today</div>
+        </div>
+        <div class="trend up"><span>▲</span> +8% vs yesterday</div>
+      </article>
+      <article class="card">
+        <div>
+          <div class="value">32.1%</div>
+          <div class="label">Bounce Rate</div>
+        </div>
+        <div class="trend up"><span>▼</span> -1.5% vs last week</div>
+      </article>
+    </section>
+
+    <section class="grid-2">
+      <article class="panel">
+        <h2>Weekly Visitors</h2>
+        <div id="lineChart" class="chart-container"></div>
+      </article>
+      <article class="panel">
+        <h2>Top 5 Products by Sales</h2>
+        <div id="barChart" class="chart-container"></div>
+      </article>
+    </section>
+
+    <section class="grid-3">
+      <article class="panel">
+        <h2>Traffic Sources</h2>
+        <div id="pieChart" class="chart-container"></div>
+      </article>
+      <article class="panel">
+        <h2>System Performance</h2>
+        <div id="radarChart" class="chart-container"></div>
+      </article>
+      <article class="panel">
+        <h2>Health Summary</h2>
+        <div style="overflow-x:auto; flex:1;">
+          <table class="details-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Current Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CPU Load</td>
+                <td>45%</td>
+                <td class="status">✅</td>
+              </tr>
+              <tr>
+                <td>Memory Usage</td>
+                <td>72%</td>
+                <td class="status">⚠️</td>
+              </tr>
+              <tr>
+                <td>Disk Space</td>
+                <td>88%</td>
+                <td class="status">⚠️</td>
+              </tr>
+              <tr>
+                <td>API Latency</td>
+                <td>210ms</td>
+                <td class="status">⚠️</td>
+              </tr>
+              <tr>
+                <td>Error Rate</td>
+                <td>1.2%</td>
+                <td class="status">❌</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const clockElement = document.getElementById('clock');
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      const dateString = now.toLocaleDateString(undefined, options);
+      const timeString = now.toLocaleTimeString(undefined, { hour12: false });
+      clockElement.textContent = `${dateString} · ${timeString}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    const palette = ['#00d4ff', '#3366ff', '#7c3aed', '#10b981', '#f59e0b'];
+
+    const line = echarts.init(document.getElementById('lineChart'));
+    const lineOption = {
+      tooltip: { trigger: 'axis', backgroundColor: 'rgba(15, 23, 42, 0.95)', borderColor: '#334155', textStyle: { color: '#e2e8f0' } },
+      grid: { left: '10%', right: '6%', top: '16%', bottom: '14%' },
+      xAxis: {
+        type: 'category',
+        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        axisLine: { lineStyle: { color: '#475569' } },
+        axisLabel: { color: '#94a3b8' },
+        boundaryGap: false,
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: { lineStyle: { color: '#475569' } },
+        splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } },
+        axisLabel: { color: '#94a3b8' },
+      },
+      series: [{
+        name: 'Visitors',
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 3, color: palette[0] },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(0, 212, 255, 0.32)' },
+            { offset: 1, color: 'rgba(0, 212, 255, 0.02)' },
+          ]),
+        },
+        emphasis: { focus: 'series' },
+        data: [3100, 4200, 3800, 4600, 5200, 4800, 5700],
+      }],
+    };
+    line.setOption(lineOption);
+
+    const bar = echarts.init(document.getElementById('barChart'));
+    const barOption = {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(15,23,42,0.95)' },
+      grid: { left: '12%', right: '8%', top: '18%', bottom: '14%' },
+      xAxis: {
+        type: 'value',
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } },
+        axisLabel: { color: '#94a3b8' },
+      },
+      yAxis: {
+        type: 'category',
+        data: ['Product E', 'Product D', 'Product C', 'Product B', 'Product A'],
+        axisLine: { lineStyle: { color: '#475569' } },
+        axisLabel: { color: '#e2e8f0' },
+      },
+      series: [{
+        name: 'Sales',
+        type: 'bar',
+        barWidth: 18,
+        itemStyle: { color: palette[1], borderRadius: 8 },
+        data: [1200, 1850, 2700, 3400, 4500],
+      }],
+    };
+    bar.setOption(barOption);
+
+    const pie = echarts.init(document.getElementById('pieChart'));
+    const pieOption = {
+      tooltip: { trigger: 'item', backgroundColor: 'rgba(15,23,42,0.95)' },
+      legend: {
+        orient: 'vertical',
+        right: 10,
+        top: 'center',
+        textStyle: { color: '#cbd5e1' },
+      },
+      series: [{
+        name: 'Traffic Sources',
+        type: 'pie',
+        radius: ['46%', '72%'],
+        center: ['45%', '50%'],
+        avoidLabelOverlap: false,
+        label: {
+          position: 'outside',
+          color: '#e2e8f0',
+          formatter: '{b}: {d}%',
+        },
+        emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.35)' } },
+        labelLine: { length: 18, length2: 8, lineStyle: { color: 'rgba(148,163,184,0.5)' } },
+        data: [
+          { value: 35, name: 'Direct' },
+          { value: 28, name: 'Organic' },
+          { value: 22, name: 'Social' },
+          { value: 10, name: 'Referral' },
+          { value: 5, name: 'Email' },
+        ],
+        color: palette,
+      }, {
+        name: 'Total',
+        type: 'pie',
+        radius: ['0%', '0%'],
+        label: {
+          show: true,
+          position: 'center',
+          formatter: 'Total\n100%',
+          color: '#e2e8f0',
+          fontSize: 16,
+          lineHeight: 24,
+        },
+        data: [{ value: 100, name: 'Total' }],
+      }],
+    };
+    pie.setOption(pieOption);
+
+    const radar = echarts.init(document.getElementById('radarChart'));
+    const radarOption = {
+      tooltip: { backgroundColor: 'rgba(15,23,42,0.95)' },
+      radar: {
+        axisName: { color: '#cbd5e1', fontSize: 12 },
+        splitLine: { lineStyle: { color: 'rgba(148,163,184,0.16)' } },
+        splitArea: { areaStyle: { color: ['rgba(0,0,0,0)', 'rgba(3,38,68,0.08)'] } },
+        indicator: [
+          { name: 'CPU', max: 100 },
+          { name: 'Memory', max: 100 },
+          { name: 'Disk', max: 100 },
+          { name: 'Network', max: 100 },
+          { name: 'Response', max: 100 },
+        ],
+      },
+      series: [{
+        name: 'System Performance',
+        type: 'radar',
+        data: [{
+          value: [68, 74, 82, 55, 61],
+          name: 'Current',
+          areaStyle: { color: 'rgba(51, 102, 255, 0.2)' },
+          lineStyle: { color: '#3366ff', width: 3 },
+          itemStyle: { color: '#00d4ff' },
+        }],
+      }],
+    };
+    radar.setOption(radarOption);
+
+    window.addEventListener('resize', () => {
+      line.resize();
+      bar.resize();
+      pie.resize();
+      radar.resize();
+    });
+  </script>
+</body>
+</html>
